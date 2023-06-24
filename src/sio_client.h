@@ -35,59 +35,59 @@ namespace sio
         ~client();
         
         //set listeners and event bindings.
-        void set_open_listener(con_listener const& l);
+        void set_open_listener(con_listener const& l) const;
         
-        void set_fail_listener(con_listener const& l);
+        void set_fail_listener(con_listener const& l) const;
         
-        void set_reconnecting_listener(con_listener const& l);
+        void set_reconnecting_listener(con_listener const& l) const;
 
-        void set_reconnect_listener(reconnect_listener const& l);
+        void set_reconnect_listener(reconnect_listener const& l) const;
 
-        void set_close_listener(close_listener const& l);
+        void set_close_listener(close_listener const& l) const;
         
-        void set_socket_open_listener(socket_listener const& l);
+        void set_socket_open_listener(socket_listener const& l) const;
         
-        void set_socket_close_listener(socket_listener const& l);
+        void set_socket_close_listener(socket_listener const& l) const;
         
-        void clear_con_listeners();
+        void clear_con_listeners() const;
         
-        void clear_socket_listeners();
+        void clear_socket_listeners() const;
         
         // Client Functions - such as send, etc.
-        void connect(const std::string& uri);
+        void connect(const std::string& uri) const;
 
-        void connect(const std::string& uri, const message::ptr& auth);
+        void connect(const std::string& uri, const message::ptr& auth) const;
 
-        void connect(const std::string& uri, const std::map<std::string,std::string>& query);
+        void connect(const std::string& uri, const std::map<std::string,std::string>& query) const;
 
-        void connect(const std::string& uri, const std::map<std::string,std::string>& query, const message::ptr& auth);
-
-        void connect(const std::string& uri, const std::map<std::string,std::string>& query,
-                     const std::map<std::string,std::string>& http_extra_headers);
+        void connect(const std::string& uri, const std::map<std::string,std::string>& query, const message::ptr& auth) const;
 
         void connect(const std::string& uri, const std::map<std::string,std::string>& query,
-                     const std::map<std::string,std::string>& http_extra_headers, const message::ptr& auth);
+                     const std::map<std::string,std::string>& http_extra_headers) const;
 
-        void set_reconnect_attempts(int attempts);
+        void connect(const std::string& uri, const std::map<std::string,std::string>& query,
+                     const std::map<std::string,std::string>& http_extra_headers, const message::ptr& auth) const;
 
-        void set_reconnect_delay(unsigned millis);
+        void set_reconnect_attempts(int attempts) const;
 
-        void set_reconnect_delay_max(unsigned millis);
+        void set_reconnect_delay(unsigned millis) const;
 
-        void set_logs_default();
+        void set_reconnect_delay_max(unsigned millis) const;
 
-        void set_logs_quiet();
+        void set_logs_default() const;
 
-        void set_logs_verbose();
+        void set_logs_quiet() const;
 
-        sio::socket::ptr const& socket(const std::string& nsp = "");
+        void set_logs_verbose() const;
+
+        sio::socket::ptr const& socket(const std::string& nsp = "") const;
         
         // Closes the connection
-        void close();
+        void close() const;
         
-        void sync_close();
+        void sync_close() const;
         
-        void set_proxy_basic_auth(const std::string& uri, const std::string& username, const std::string& password);
+        void set_proxy_basic_auth(const std::string& uri, const std::string& username, const std::string& password) const;
 		
         bool opened() const;
         

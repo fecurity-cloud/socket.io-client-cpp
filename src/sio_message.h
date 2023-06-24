@@ -385,7 +385,7 @@ namespace sio
         {
             static std::shared_ptr<message> not_found;
 
-            std::map<std::string,message::ptr>::const_iterator it = _v.find(key);
+            const auto it = _v.find(key);
             if (it != _v.cend()) return it->second;
             return not_found;
         }

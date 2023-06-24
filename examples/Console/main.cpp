@@ -35,11 +35,11 @@ bool connect_finish = false;
 
 class connection_listener
 {
-    sio::client &handler;
+    client&handler;
 
 public:
     
-    connection_listener(sio::client& h):
+    connection_listener(client& h):
     handler(h)
     {
     }
@@ -71,32 +71,32 @@ socket::ptr current_socket;
 
 void bind_events()
 {
-	current_socket->on("new message", sio::socket::event_listener_aux([&](string const& name, message::ptr const& data, bool isAck,message::list &ack_resp)
+	current_socket->on("new message", socket::event_listener_aux([&](string const& name, message::ptr const& data, bool isAck,message::list &ack_resp)
                        {
                            _lock.lock();
-                           string user = data->get_map()["username"]->get_string();
-                           string message = data->get_map()["message"]->get_string();
+                           const string user = data->get_map()["username"]->get_string();
+                           const string message = data->get_map()["message"]->get_string();
                            EM(user<<":"<<message);
                            _lock.unlock();
                        }));
     
-    current_socket->on("user joined",sio::socket::event_listener_aux([&](string const& name, message::ptr const& data, bool isAck,message::list &ack_resp)
+    current_socket->on("user joined", socket::event_listener_aux([&](string const& name, message::ptr const& data, bool isAck,message::list &ack_resp)
                        {
                            _lock.lock();
-                           string user = data->get_map()["username"]->get_string();
-                           participants  = data->get_map()["numUsers"]->get_int();
-                           bool plural = participants !=1;
+                           const string user = data->get_map()["username"]->get_string();
+                           participants  = static_cast<int>(data->get_map()["numUsers"]->get_int());
+                           const bool plural = participants !=1;
                            
                            //     abc "
                            HIGHLIGHT(user<<" joined"<<"\nthere"<<(plural?" are ":"'s ")<< participants<<(plural?" participants":" participant"));
                            _lock.unlock();
                        }));
-    current_socket->on("user left", sio::socket::event_listener_aux([&](string const& name, message::ptr const& data, bool isAck,message::list &ack_resp)
+    current_socket->on("user left", socket::event_listener_aux([&](string const& name, message::ptr const& data, bool isAck,message::list &ack_resp)
                        {
                            _lock.lock();
-                           string user = data->get_map()["username"]->get_string();
-                           participants  = data->get_map()["numUsers"]->get_int();
-                           bool plural = participants !=1;
+                           const string user = data->get_map()["username"]->get_string();
+                           participants  = static_cast<int>(data->get_map()["numUsers"]->get_int());
+                           const bool plural = participants !=1;
                            HIGHLIGHT(user<<" left"<<"\nthere"<<(plural?" are ":"'s ")<< participants<<(plural?" participants":" participant"));
                            _lock.unlock();
                        }));
@@ -104,13 +104,12 @@ void bind_events()
 
 MAIN_FUNC
 {
-
-    sio::client h;
+    client h;
     connection_listener l(h);
     
-    h.set_open_listener(std::bind(&connection_listener::on_connected, &l));
-    h.set_close_listener(std::bind(&connection_listener::on_close, &l,std::placeholders::_1));
-    h.set_fail_listener(std::bind(&connection_listener::on_fail, &l));
+    h.set_open_listener([ObjectPtr = &l] { ObjectPtr->on_connected(); });
+    h.set_close_listener([ObjectPtr = &l]<typename T0>(T0&& PH1) { ObjectPtr->on_close(std::forward<T0>(PH1)); });
+    h.set_fail_listener([ObjectPtr = &l] { ObjectPtr->on_fail(); });
     h.connect("http://127.0.0.1:3000");
     _lock.lock();
     if(!connect_finish)
@@ -126,10 +125,10 @@ Login:
         
         getline(cin, nickname);
     }
-	current_socket->on("login", sio::socket::event_listener_aux([&](string const& name, message::ptr const& data, bool isAck,message::list &ack_resp){
+	current_socket->on("login", socket::event_listener_aux([&](string const& name, message::ptr const& data, bool isAck,message::list &ack_resp){
         _lock.lock();
-        participants = data->get_map()["numUsers"]->get_int();
-        bool plural = participants !=1;
+        participants = static_cast<int>(data->get_map()["numUsers"]->get_int());
+        const bool plural = participants !=1;
         HIGHLIGHT("Welcome to Socket.IO Chat-\nthere"<<(plural?" are ":"'s ")<< participants<<(plural?" participants":" participant"));
         _cond.notify_all();
         _lock.unlock();
@@ -151,7 +150,7 @@ Login:
             {
                 break;
             }
-            else if(line.length() > 5&&line.substr(0,5) == "$nsp ")
+            if(line.length() > 5&&line.substr(0,5) == "$nsp ")
             {
                 string new_nsp = line.substr(5);
                 if(new_nsp == current_socket->get_namespace())

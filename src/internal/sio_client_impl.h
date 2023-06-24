@@ -34,9 +34,8 @@ typedef websocketpp::config::asio_client client_config;
 #include <asio/ssl/context.hpp>
 #endif
 
-#include <asio/steady_timer.hpp>
-#include <asio/error_code.hpp>
-#include <asio/io_service.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <boost/asio/io_service.hpp>
 
 #include <atomic>
 #include <memory>
@@ -106,8 +105,8 @@ namespace sio
         // Client Functions - such as send, etc.
         void connect(const std::string& uri, const std::map<std::string, std::string>& queryString,
                      const std::map<std::string, std::string>& httpExtraHeaders, const message::ptr& auth);
-        
-        sio::socket::ptr const& socket(const std::string& nsp);
+
+        socket::ptr const& socket(const std::string& nsp);
         
         // Closes the connection
         void close();
@@ -133,15 +132,15 @@ namespace sio
         void set_proxy_basic_auth(const std::string& uri, const std::string& username, const std::string& password);
 
     protected:
-        void send(packet& p);
+        void send(packet& p) const;
         
         void remove_socket(std::string const& nsp);
         
-        asio::io_service& get_io_service();
+        lib::asio::io_service& get_io_service();
         
-        void on_socket_closed(std::string const& nsp);
+        void on_socket_closed(std::string const& nsp) const;
         
-        void on_socket_opened(std::string const& nsp);
+        void on_socket_opened(std::string const& nsp) const;
         
     private:
         void run_loop();
@@ -152,17 +151,17 @@ namespace sio
         
         void send_impl(std::shared_ptr<const std::string> const&  payload_ptr,frame::opcode::value opcode);
         
-        void ping(const asio::error_code& ec);
+        void ping(const lib::asio::error_code& ec);
         
-        void timeout_ping(const asio::error_code& ec);
+        void timeout_ping(const lib::asio::error_code& ec);
 
-        void timeout_reconnect(asio::error_code const& ec);
+        void timeout_reconnect(lib::asio::error_code const& ec);
 
         unsigned next_delay() const;
 
         socket::ptr get_socket_locked(std::string const& nsp);
         
-        void sockets_invoke_void(void (sio::socket::*fn)(void));
+        void sockets_invoke_void(void (socket::*fn)(void));
         
         void on_decode(packet const& pack);
         void on_encode(bool isBinary,shared_ptr<const string> const& payload);
@@ -170,11 +169,11 @@ namespace sio
         //websocket callbacks
         void on_fail(connection_hdl con);
 
-        void on_open(connection_hdl con);
+        void on_open(const connection_hdl& con);
 
-        void on_close(connection_hdl con);
+        void on_close(const connection_hdl& con);
 
-        void on_message(connection_hdl con, client_type::message_ptr msg);
+        void on_message(connection_hdl con, const client_type::message_ptr& msg);
 
         //socketio callbacks
         void on_handshake(message::ptr const& message);
@@ -216,9 +215,9 @@ namespace sio
         
         packet_manager m_packet_mgr;
         
-        std::unique_ptr<asio::steady_timer> m_ping_timeout_timer;
+        std::unique_ptr<lib::asio::steady_timer> m_ping_timeout_timer;
 
-        std::unique_ptr<asio::steady_timer> m_reconn_timer;
+        std::unique_ptr<lib::asio::steady_timer> m_reconn_timer;
         
         con_state m_con_state;
         
@@ -245,8 +244,8 @@ namespace sio
 
         std::atomic<bool> m_abort_retries { false };
 
-        friend class sio::client;
-        friend class sio::socket;
+        friend class client;
+        friend class socket;
     };
 }
 #endif // SIO_CLIENT_IMPL_H

@@ -8,3 +8,6 @@ cmake_install.cmake
 install_manifest.txt
 libsioclient.a
 .DS_Store
+
+.vs
+examples/Console/SioChatDemo/Debug

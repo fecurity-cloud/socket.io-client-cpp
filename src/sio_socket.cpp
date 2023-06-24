@@ -1,8 +1,7 @@
 #include "sio_socket.h"
 #include "internal/sio_packet.h"
 #include "internal/sio_client_impl.h"
-#include <asio/steady_timer.hpp>
-#include <asio/error_code.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <queue>
 #include <chrono>
 #include <cstdarg>
@@ -52,11 +51,8 @@ namespace sio
     {
         if(m_messages.size()>0)
             return m_messages[0];
-        else
-        {
-            static message::ptr null_ptr;
-            return null_ptr;
-        }
+        static message::ptr null_ptr;
+        return null_ptr;
     }
 
     const message::list& event::get_messages() const
@@ -159,7 +155,7 @@ namespace sio
         
         void ack(int msgId,string const& name,message::list const& ack_message);
         
-        void timeout_connection(const asio::error_code &ec);
+        void timeout_connection(const lib::asio::error_code &ec);
         
         void send_connect();
         
@@ -181,7 +177,7 @@ namespace sio
         
         error_listener m_error_listener;
         
-        std::unique_ptr<asio::steady_timer> m_connection_timer;
+        std::unique_ptr<lib::asio::steady_timer> m_connection_timer;
         
         std::queue<packet> m_packet_queue;
         
@@ -199,14 +195,14 @@ namespace sio
     
     void socket::impl::on(std::string const& event_name,event_listener const& func)
     {
-        std::lock_guard<std::mutex> guard(m_event_mutex);
+        std::lock_guard guard(m_event_mutex);
         m_event_binding[event_name] = func;
     }
     
     void socket::impl::off(std::string const& event_name)
     {
-        std::lock_guard<std::mutex> guard(m_event_mutex);
-        auto it = m_event_binding.find(event_name);
+        std::lock_guard guard(m_event_mutex);
+        const auto it = m_event_binding.find(event_name);
         if(it!=m_event_binding.end())
         {
             m_event_binding.erase(it);
@@ -215,7 +211,7 @@ namespace sio
     
     void socket::impl::off_all()
     {
-        std::lock_guard<std::mutex> guard(m_event_mutex);
+        std::lock_guard guard(m_event_mutex);
         m_event_binding.clear();
     }
     
@@ -252,12 +248,12 @@ namespace sio
     void socket::impl::emit(std::string const& name, message::list const& msglist, std::function<void (message::list const&)> const& ack)
     {
         NULL_GUARD(m_client);
-        message::ptr msg_ptr = msglist.to_array_message(name);
+        const message::ptr msg_ptr = msglist.to_array_message(name);
         int pack_id;
         if(ack)
         {
             pack_id = s_global_event_id++;
-            std::lock_guard<std::mutex> guard(m_event_mutex);
+            std::lock_guard guard(m_event_mutex);
             m_acks[pack_id] = ack;
         }
         else
@@ -273,8 +269,8 @@ namespace sio
         NULL_GUARD(m_client);
         packet p(packet::type_connect, m_nsp, m_auth);
         m_client->send(p);
-        m_connection_timer.reset(new asio::steady_timer(m_client->get_io_service()));
-        asio::error_code ec;
+        m_connection_timer.reset(new lib::asio::steady_timer(m_client->get_io_service()));
+        lib::asio::error_code ec;
         m_connection_timer->expires_from_now(std::chrono::milliseconds(20000), ec);
         m_connection_timer->async_wait(std::bind(&socket::impl::timeout_connection,this, std::placeholders::_1));
     }
@@ -289,9 +285,9 @@ namespace sio
             
             if(!m_connection_timer)
             {
-                m_connection_timer.reset(new asio::steady_timer(m_client->get_io_service()));
+                m_connection_timer.reset(new lib::asio::steady_timer(m_client->get_io_service()));
             }
-            asio::error_code ec;
+            lib::asio::error_code ec;
             m_connection_timer->expires_from_now(std::chrono::milliseconds(3000), ec);
             m_connection_timer->async_wait(std::bind(&socket::impl::on_close, this));
         }
@@ -337,7 +333,7 @@ namespace sio
         }
         m_connected = false;
 		{
-			std::lock_guard<std::mutex> guard(m_packet_mutex);
+			std::lock_guard guard(m_packet_mutex);
 			while (!m_packet_queue.empty()) {
 				m_packet_queue.pop();
 			}
@@ -357,7 +353,7 @@ namespace sio
         if(m_connected)
         {
             m_connected = false;
-			std::lock_guard<std::mutex> guard(m_packet_mutex);
+			std::lock_guard guard(m_packet_mutex);
             while (!m_packet_queue.empty()) {
                 m_packet_queue.pop();
             }
@@ -389,13 +385,13 @@ namespace sio
             case packet::type_binary_event:
             {
                 LOG("Received Message type (Event)"<<std::endl);
-                const message::ptr ptr = p.get_message();
+                const message::ptr& ptr = p.get_message();
                 if(ptr->get_flag() == message::flag_array)
                 {
-                    const array_message* array_ptr = static_cast<const array_message*>(ptr.get());
-                    if(array_ptr->get_vector().size() >= 1&&array_ptr->get_vector()[0]->get_flag() == message::flag_string)
+                    const auto array_ptr = static_cast<const array_message*>(ptr.get());
+                    if(!array_ptr->get_vector().empty() &&array_ptr->get_vector()[0]->get_flag() == message::flag_string)
                     {
-                        const string_message* name_ptr = static_cast<const string_message*>(array_ptr->get_vector()[0].get());
+                        const auto name_ptr = static_cast<const string_message*>(array_ptr->get_vector()[0].get());
                         message::list mlist;
                         for(size_t i = 1;i<array_ptr->get_vector().size();++i)
                         {
@@ -412,10 +408,10 @@ namespace sio
             case packet::type_binary_ack:
             {
                 LOG("Received Message type (ACK)"<<std::endl);
-                const message::ptr ptr = p.get_message();
+                const message::ptr& ptr = p.get_message();
                 if(ptr->get_flag() == message::flag_array)
                 {
-					message::list msglist(ptr->get_vector());
+                    const message::list msglist(ptr->get_vector());
 					this->on_socketio_ack(p.get_pack_id(),msglist);
                 }
 				else
@@ -439,9 +435,9 @@ namespace sio
     
     void socket::impl::on_socketio_event(const std::string& nsp,int msgId,const std::string& name, message::list && message)
     {
-        bool needAck = msgId >= 0;
+        const bool needAck = msgId >= 0;
         event ev = event_adapter::create_event(nsp,name, std::move(message),needAck);
-        event_listener func = this->get_bind_listener_locked(name);
+        const event_listener func = this->get_bind_listener_locked(name);
         if(func)func(ev);
         if(needAck)
         {
@@ -459,8 +455,8 @@ namespace sio
     {
         std::function<void (message::list const&)> l;
         {
-            std::lock_guard<std::mutex> guard(m_event_mutex);
-            auto it = m_acks.find(msgId);
+            std::lock_guard guard(m_event_mutex);
+            const auto it = m_acks.find(msgId);
             if(it!=m_acks.end())
             {
                 l = it->second;
@@ -475,7 +471,7 @@ namespace sio
         if(m_error_listener)m_error_listener(err_message);
     }
     
-    void socket::impl::timeout_connection(const asio::error_code &ec)
+    void socket::impl::timeout_connection(const lib::asio::error_code &ec)
     {
         NULL_GUARD(m_client);
         if(ec)
@@ -509,15 +505,15 @@ namespace sio
         }
         else
         {
-			std::lock_guard<std::mutex> guard(m_packet_mutex);
+			std::lock_guard guard(m_packet_mutex);
             m_packet_queue.push(p);
         }
     }
     
     socket::event_listener socket::impl::get_bind_listener_locked(const string &event)
     {
-        std::lock_guard<std::mutex> guard(m_event_mutex);
-        auto it = m_event_binding.find(event);
+        std::lock_guard guard(m_event_mutex);
+        const auto it = m_event_binding.find(event);
         if(it!=m_event_binding.end())
         {
             return it->second;

@@ -22,100 +22,100 @@ namespace sio
         delete m_impl;
     }
     
-    void client::set_open_listener(con_listener const& l)
+    void client::set_open_listener(con_listener const& l) const
     {
         m_impl->set_open_listener(l);
     }
     
-    void client::set_fail_listener(con_listener const& l)
+    void client::set_fail_listener(con_listener const& l) const
     {
         m_impl->set_fail_listener(l);
     }
     
-    void client::set_close_listener(close_listener const& l)
+    void client::set_close_listener(close_listener const& l) const
     {
         m_impl->set_close_listener(l);
     }
     
-    void client::set_socket_open_listener(socket_listener const& l)
+    void client::set_socket_open_listener(socket_listener const& l) const
     {
         m_impl->set_socket_open_listener(l);
     }
     
-    void client::set_reconnect_listener(reconnect_listener const& l)
+    void client::set_reconnect_listener(reconnect_listener const& l) const
     {
         m_impl->set_reconnect_listener(l);
     }
 
-    void client::set_reconnecting_listener(con_listener const& l)
+    void client::set_reconnecting_listener(con_listener const& l) const
     {
         m_impl->set_reconnecting_listener(l);
     }
 
-    void client::set_socket_close_listener(socket_listener const& l)
+    void client::set_socket_close_listener(socket_listener const& l) const
     {
         m_impl->set_socket_close_listener(l);
     }
     
-    void client::clear_con_listeners()
+    void client::clear_con_listeners() const
     {
         m_impl->clear_con_listeners();
     }
     
-    void client::clear_socket_listeners()
+    void client::clear_socket_listeners() const
     {
         m_impl->clear_socket_listeners();
     }
 	
-    void client::set_proxy_basic_auth(const std::string& uri, const std::string& username, const std::string& password)
+    void client::set_proxy_basic_auth(const std::string& uri, const std::string& username, const std::string& password) const
     {
         m_impl->set_proxy_basic_auth(uri, username, password);
     }
 
-    void client::connect(const std::string& uri)
+    void client::connect(const std::string& uri) const
     {
         m_impl->connect(uri, {}, {}, {});
     }
 
-    void client::connect(const std::string& uri, const message::ptr& auth)
+    void client::connect(const std::string& uri, const message::ptr& auth) const
     {
         m_impl->connect(uri, {}, {}, auth);
     }
 
-    void client::connect(const std::string& uri, const std::map<string,string>& query)
+    void client::connect(const std::string& uri, const std::map<string,string>& query) const
     {
         m_impl->connect(uri, query, {}, {});
     }
 
-    void client::connect(const std::string& uri, const std::map<string,string>& query, const message::ptr& auth)
+    void client::connect(const std::string& uri, const std::map<string,string>& query, const message::ptr& auth) const
     {
         m_impl->connect(uri, query, {}, auth);
     }
 
     void client::connect(const std::string& uri, const std::map<std::string,std::string>& query,
-                         const std::map<std::string,std::string>& http_extra_headers)
+                         const std::map<std::string,std::string>& http_extra_headers) const
     {
         m_impl->connect(uri, query, http_extra_headers, {});
     }
 
     void client::connect(const std::string& uri, const std::map<std::string,std::string>& query,
-                         const std::map<std::string,std::string>& http_extra_headers, const message::ptr& auth)
+                         const std::map<std::string,std::string>& http_extra_headers, const message::ptr& auth) const
     {
         m_impl->connect(uri, query, http_extra_headers, auth);
     }
     
-    socket::ptr const& client::socket(const std::string& nsp)
+    socket::ptr const& client::socket(const std::string& nsp) const
     {
         return m_impl->socket(nsp);
     }
     
     // Closes the connection
-    void client::close()
+    void client::close() const
     {
         m_impl->close();
     }
     
-    void client::sync_close()
+    void client::sync_close() const
     {
         m_impl->sync_close();
     }
@@ -130,32 +130,32 @@ namespace sio
         return m_impl->get_sessionid();
     }
 
-    void client::set_reconnect_attempts(int attempts)
+    void client::set_reconnect_attempts(int attempts) const
     {
         m_impl->set_reconnect_attempts(attempts);
     }
 
-    void client::set_reconnect_delay(unsigned millis)
+    void client::set_reconnect_delay(unsigned millis) const
     {
         m_impl->set_reconnect_delay(millis);
     }
 
-    void client::set_reconnect_delay_max(unsigned millis)
+    void client::set_reconnect_delay_max(unsigned millis) const
     {
         m_impl->set_reconnect_delay_max(millis);
     }
 
-    void client::set_logs_default()
+    void client::set_logs_default() const
     {
         m_impl->set_logs_default();
     }
 
-    void client::set_logs_quiet()
+    void client::set_logs_quiet() const
     {
         m_impl->set_logs_quiet();
     }
 
-    void client::set_logs_verbose()
+    void client::set_logs_verbose() const
     {
         m_impl->set_logs_verbose();
     }
