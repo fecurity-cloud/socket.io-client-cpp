@@ -495,7 +495,7 @@ namespace sio
     {
         if(message && message->get_flag() == message::flag_object)
         {
-            const object_message* obj_ptr = static_cast<object_message*>(message.get());
+            const object_message* obj_ptr = dynamic_cast<object_message*>(message.get());
             const map<string,message::ptr>* values = &(obj_ptr->get_map());
             auto it = values->find("sid");
             if (it!= values->end()) {

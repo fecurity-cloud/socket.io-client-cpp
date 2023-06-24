@@ -388,10 +388,10 @@ namespace sio
                 const message::ptr& ptr = p.get_message();
                 if(ptr->get_flag() == message::flag_array)
                 {
-                    const auto array_ptr = static_cast<const array_message*>(ptr.get());
+                    const auto array_ptr = dynamic_cast<const array_message*>(ptr.get());
                     if(!array_ptr->get_vector().empty() &&array_ptr->get_vector()[0]->get_flag() == message::flag_string)
                     {
-                        const auto name_ptr = static_cast<const string_message*>(array_ptr->get_vector()[0].get());
+                        const auto name_ptr = dynamic_cast<const string_message*>(array_ptr->get_vector()[0].get());
                         message::list mlist;
                         for(size_t i = 1;i<array_ptr->get_vector().size();++i)
                         {
